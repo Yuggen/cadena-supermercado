@@ -60,9 +60,7 @@ CREATE TABLE [Com2900G10].[sucursal].[empleado] (
     direccion       VARCHAR(100),
     email_personal  VARCHAR(60),
     email_empresa   VARCHAR(60),
-    cuil            CHAR(13)     
-                    CHECK ([cuil] like '[0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-[0-9]' OR cuil is null)
-					NOT NULL,
+    cuil            CHAR(13) NOT NULL,
     cargo           VARCHAR(30),
     id_sucursal     SMALLINT NOT NULL,
     turno           VARCHAR(20) 

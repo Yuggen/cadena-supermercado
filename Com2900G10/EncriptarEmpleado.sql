@@ -10,7 +10,7 @@ BEGIN
 	ALTER TABLE sucursal.empleado ALTER COLUMN direccion nvarchar(256)
 	ALTER TABLE sucursal.empleado ALTER COLUMN email_personal nvarchar(256)
 	ALTER TABLE sucursal.empleado ALTER COLUMN cuil nvarchar(256)
-	ALTER TABLE sucursal.empleado ADD encriptado bit default 0
+	ALTER TABLE sucursal.empleado ADD encriptado bit default 0 not null
 END;
 GO
 
@@ -22,10 +22,10 @@ BEGIN
 		SELECT * INTO empleadoTemporal from sucursal.empleado
 
 		UPDATE sucursal.empleado SET 
-			direccion= EncryptByKey(Key_GUID('clave_simetrica'), t.direccion),
-			cuil= EncryptByKey(Key_GUID('clave_simetrica'), t.cuil),
-			dni= EncryptByKey(Key_GUID('clave_simetrica'), t.dni), 
-			email_personal= EncryptByKey(Key_GUID('clave_simetrica'), t.email_personal),
+			direccion= EncryptByKey(Key_GUID('clave_simetrica_empleado'), t.direccion),
+			cuil= EncryptByKey(Key_GUID('clave_simetrica_empleado'), t.cuil),
+			dni= EncryptByKey(Key_GUID('clave_simetrica_empleado'), t.dni), 
+			email_personal= EncryptByKey(Key_GUID('clave_simetrica_empleado'), t.email_personal),
 			encriptado= 1
 			from empleadoTemporal t
 		WHERE sucursal.empleado.legajo = t.legajo AND sucursal.empleado.encriptado = 0
@@ -41,10 +41,10 @@ AS
 BEGIN
 	OPEN SYMMETRIC KEY clave_simetrica_empleado DECRYPTION BY CERTIFICATE certificado_encriptacion_empleado WITH PASSWORD= 'clave123';
 		UPDATE sucursal.empleado SET 
-			direccion= CONVERT(varchar(256),DECRYPTBYKEY(direccion)),
-			cuil= CONVERT(varchar(256),DECRYPTBYKEY(cuil)),
-			dni= CONVERT(varchar(256),DECRYPTBYKEY(dni)),
-			email_personal= CONVERT(varchar(256),DECRYPTBYKEY(email_personal)),
+			direccion= CONVERT(nvarchar(256),DECRYPTBYKEY(direccion)),
+			cuil= CONVERT(nvarchar(256),DECRYPTBYKEY(cuil)),
+			dni= CONVERT(nvarchar(256),DECRYPTBYKEY(dni)),
+			email_personal= CONVERT(nvarchar(256),DECRYPTBYKEY(email_personal)),
 			encriptado= 0
 		WHERE encriptado = 1
 	CLOSE SYMMETRIC KEY clave_simetrica_empleado;
@@ -55,13 +55,14 @@ CREATE OR ALTER PROCEDURE LeerEmpleadoEncriptado
 AS
 BEGIN
 	OPEN SYMMETRIC KEY clave_simetrica_empleado DECRYPTION BY CERTIFICATE certificado_encriptacion_empleado WITH PASSWORD = 'clave123';
+		SELECT * FROM sucursal.empleado
 		SELECT
 		legajo,nombre,apellido,
-		CONVERT(varchar(256),DECRYPTBYKEY(dni)),
-		CONVERT(varchar(256),DECRYPTBYKEY(direccion)),
-		CONVERT(varchar(256),DECRYPTBYKEY(email_personal)),
+		CONVERT(nvarchar(256),DECRYPTBYKEY(dni)),
+		CONVERT(nvarchar(256),DECRYPTBYKEY(direccion)),
+		CONVERT(nvarchar(256),DECRYPTBYKEY(email_personal)),
 		email_empresa,
-		CONVERT(varchar(256),DECRYPTBYKEY(cuil)),
+		CONVERT(nvarchar(256),DECRYPTBYKEY(cuil)),
 		cargo,id_sucursal,turno,activo
 		FROM sucursal.empleado
 	CLOSE SYMMETRIC KEY clave_simetrica_empleado;
